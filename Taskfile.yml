@@ -1,0 +1,19 @@
+version: '3'
+
+tasks:
+  test:
+    cmd: go test -cover ./...
+
+  lint:
+      desc: Run linters using golangci-lint
+      cmds:
+        - golangci-lint run --config .golangci.yml
+      silent: true
+
+  genmock-*:
+    desc: exec "task genmock-OrdersRepository -- internal/server/entities"
+          then rename internal/server/entities/mocks/CreateOrderService to snake case
+    vars:
+      STRUCT: '{{index .MATCH 0}}'
+    cmds:
+      - mockgen -package=mocks -destination={{.CLI_ARGS}}/mocks/{{.STRUCT}}.go github.com/vysogota0399/gophermart_billing/{{.CLI_ARGS}} {{.STRUCT}}
