@@ -54,15 +54,16 @@ func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.WithdrawParam
 		}
 
 		withdraw_amount := int64(wd.Amount * 100)
+		srv.lg.DebugCtx(
+			ctx,
+			"withdraw debug information",
+			zap.String("result", "failed"),
+			zap.Int64("current_balance", balance),
+			zap.Int64("withdtaw_amount", withdraw_amount),
+			zap.Int64("account_id", wd.AccountId),
+		)
+
 		if balance < withdraw_amount {
-			srv.lg.DebugCtx(
-				ctx,
-				"withdraw debug information",
-				zap.String("result", "failed"),
-				zap.Int64("current_balance", balance),
-				zap.Int64("withdtaw_amount", withdraw_amount),
-				zap.Int64("account_id", wd.AccountId),
-			)
 			return ErrNotEnoughFunds
 		}
 
