@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +13,7 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/server/entities"
 	"github.com/vysogota0399/gophermart_billing/internal/server/services/mocks"
 	"github.com/vysogota0399/gophermart_protos/gen/commands/create_order"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestCreateOrderService_Call(t *testing.T) {
@@ -21,7 +21,7 @@ func TestCreateOrderService_Call(t *testing.T) {
 		fsm *mocks.MockOrderStateMachineContainer
 	}
 	type args struct {
-		Order *create_order.NewOrder
+		Order *create_order.CreateNewOrderParams
 	}
 	type want struct {
 		err   bool
@@ -30,25 +30,24 @@ func TestCreateOrderService_Call(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		prepare func(f *fields, in *create_order.NewOrder)
+		prepare func(f *fields, in *create_order.CreateNewOrderParams)
 		args    args
 		want    want
 	}{
 		{
 			name: "when update order state",
 			args: args{
-				Order: &create_order.NewOrder{UploadedAt: time.Now().Format(time.RFC3339Nano)},
+				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now()},
 			},
-			prepare: func(f *fields, in *create_order.NewOrder) {
-				t, _ := time.Parse(time.RFC3339Nano, in.UploadedAt)
+			prepare: func(f *fields, in *create_order.CreateNewOrderParams) {
 				f.fsm.EXPECT().Create(
 					gomock.Any(),
 					entities.OrderFsmOption{
 						Order: &models.Order{
-							UUID:       in.Uuid,
+							UUID:       in.Uuid.Value,
 							Number:     in.Number,
-							UploadedAt: t,
-							AccountID:  in.AccountId,
+							UploadedAt: in.UploadedAt.AsTime(),
+							AccountID:  in.Account.Id,
 						},
 					},
 				).Return(&models.Order{}, nil)
@@ -61,18 +60,17 @@ func TestCreateOrderService_Call(t *testing.T) {
 		{
 			name: "when create order failed",
 			args: args{
-				Order: &create_order.NewOrder{UploadedAt: time.Now().Format(time.RFC3339Nano)},
+				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now()},
 			},
-			prepare: func(f *fields, in *create_order.NewOrder) {
-				t, _ := time.Parse(time.RFC3339Nano, in.UploadedAt)
+			prepare: func(f *fields, in *create_order.CreateNewOrderParams) {
 				f.fsm.EXPECT().Create(
 					gomock.Any(),
 					entities.OrderFsmOption{
 						Order: &models.Order{
-							UUID:       in.Uuid,
+							UUID:       in.Uuid.Value,
 							Number:     in.Number,
-							UploadedAt: t,
-							AccountID:  in.AccountId,
+							UploadedAt: in.UploadedAt.AsTime(),
+							AccountID:  in.Account.Id,
 						},
 					},
 				).Return(nil, errors.New("error"))

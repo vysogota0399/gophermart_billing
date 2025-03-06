@@ -37,7 +37,7 @@ func (m *MockCreateOrderService) EXPECT() *MockCreateOrderServiceMockRecorder {
 }
 
 // Call mocks base method.
-func (m *MockCreateOrderService) Call(arg0 context.Context, arg1 *create_order.NewOrder) (*models.Order, error) {
+func (m *MockCreateOrderService) Call(arg0 context.Context, arg1 *create_order.CreateNewOrderParams) (*models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Call", arg0, arg1)
 	ret0, _ := ret[0].(*models.Order)

@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
@@ -24,20 +23,15 @@ func NewCreateOrderService(lg *logging.ZapLogger, orderFsm OrderStateMachineCont
 	return &CreateOrderService{lg: lg, orderFsm: orderFsm}
 }
 
-func (srv *CreateOrderService) Call(ctx context.Context, in *create_order.NewOrder) (*models.Order, error) {
-	up, err := time.Parse(time.RFC3339Nano, in.UploadedAt)
-	if err != nil {
-		return nil, fmt.Errorf("create_order_service: call failed - invalid time format error %w", err)
-	}
-
+func (srv *CreateOrderService) Call(ctx context.Context, in *create_order.CreateNewOrderParams) (*models.Order, error) {
 	order, err := srv.orderFsm.Create(
 		ctx,
 		entities.OrderFsmOption{
 			Order: &models.Order{
-				UUID:       in.Uuid,
+				UUID:       in.Uuid.Value,
 				Number:     in.Number,
-				UploadedAt: up,
-				AccountID:  in.AccountId,
+				UploadedAt: in.UploadedAt.AsTime(),
+				AccountID:  in.Account.Id,
 			},
 		},
 	)

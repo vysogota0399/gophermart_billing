@@ -9,6 +9,8 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/transaction_outbox"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
+	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
@@ -42,9 +44,9 @@ func NewPublisher(
 
 func (p *Publisher) Publish(ctx context.Context, e *models.OrderEvent) error {
 	order := events.OrderUpdated{
-		EventUuid: e.Meta.UUID,
-		Uuid:      e.Meta.OrderUUID,
-		State:     e.Meta.OrderState,
+		EventUuid: &common.Uuid{Value: e.Meta.UUID},
+		Uuid:      &common.Uuid{Value: e.Meta.OrderUUID},
+		State:     entities.OrderStates(e.Meta.OrderState),
 	}
 
 	event, err := proto.Marshal(&order)

@@ -18,7 +18,7 @@ type Handler struct {
 }
 
 type Command interface {
-	Call(ctx context.Context, acc *events.FinishedEvent) (*models.Order, error)
+	Call(ctx context.Context, acc *events.AccrualFinishedEvent) (*models.Order, error)
 }
 
 func NewHandler(
@@ -36,19 +36,19 @@ func NewHandler(
 
 type AccrualFinisedEventsRepository interface {
 	ReserveEvent(ctx context.Context, eventName string) (*models.AccrualEvent, error)
-	SetState(ctx context.Context, uuid string, newState string, tx ...*sql.Tx) error
+	SetState(ctx context.Context, uuid string, newState int32, tx ...*sql.Tx) error
 }
 
-func (h *Handler) Call(ctx context.Context, event *events.FinishedEvent) {
+func (h *Handler) Call(ctx context.Context, event *events.AccrualFinishedEvent) {
 	ctx = h.lg.WithContextFields(ctx, zap.String("actor", "accrual_finised_handler"))
 
-	if err := h.events.SetState(ctx, event.EventUuid, models.AccrualProcessingState); err != nil {
+	if err := h.events.SetState(ctx, event.EventUuid.Value, models.AccrualProcessingState); err != nil {
 		h.lg.ErrorCtx(ctx, "set event processing state error", zap.Error(err))
 		return
 	}
 
 	if _, err := h.command.Call(ctx, event); err != nil {
-		if err := h.events.SetState(ctx, event.EventUuid, models.AccrualFailedState); err != nil {
+		if err := h.events.SetState(ctx, event.EventUuid.Value, models.AccrualFailedState); err != nil {
 			h.lg.ErrorCtx(ctx, "set event failed state error", zap.Error(err))
 		}
 
@@ -56,7 +56,7 @@ func (h *Handler) Call(ctx context.Context, event *events.FinishedEvent) {
 		return
 	}
 
-	if err := h.events.SetState(ctx, event.EventUuid, models.AccrualFinishedState); err != nil {
+	if err := h.events.SetState(ctx, event.EventUuid.Value, models.AccrualFinishedState); err != nil {
 		h.lg.ErrorCtx(ctx, "set event finished state error", zap.Error(err))
 	}
 }

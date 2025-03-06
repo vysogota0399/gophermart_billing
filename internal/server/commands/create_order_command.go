@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type CreateOrderCommand struct {
@@ -21,7 +22,7 @@ type CreateOrderCommand struct {
 }
 
 type CreateOrderService interface {
-	Call(context.Context, *create_order.NewOrder) (*models.Order, error)
+	Call(context.Context, *create_order.CreateNewOrderParams) (*models.Order, error)
 }
 
 func NewCreateOrderCommand(srv CreateOrderService, lg *logging.ZapLogger) *CreateOrderCommand {
@@ -30,7 +31,7 @@ func NewCreateOrderCommand(srv CreateOrderService, lg *logging.ZapLogger) *Creat
 
 var ErrOrderAlreadtExists = status.Errorf(codes.AlreadyExists, "order already exists")
 
-func (cmd *CreateOrderCommand) Create(ctx context.Context, order *create_order.NewOrder) (*create_order.NewOrderResponse, error) {
+func (cmd *CreateOrderCommand) Create(ctx context.Context, order *create_order.CreateNewOrderParams) (*emptypb.Empty, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "order_service_command"))
 
 	if _, err := cmd.srv.Call(ctx, order); err != nil {

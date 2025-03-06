@@ -3,15 +3,19 @@ package created
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/vysogota0399/gophermart_billing/internal/config"
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/transaction_outbox"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
+	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Publisher struct {
@@ -41,13 +45,18 @@ func NewPublisher(
 }
 
 func (p *Publisher) Publish(ctx context.Context, e *models.OrderEvent) error {
+	t, err := time.Parse(time.RFC3339Nano, e.Meta.OrderUploadedAt)
+	if err != nil {
+		return fmt.Errorf("publisher: parse time error %w", err)
+	}
+
 	order := events.OrderCreated{
-		EventUuid:  e.Meta.UUID,
-		Uuid:       e.Meta.OrderUUID,
+		EventUuid:  &common.Uuid{Value: e.Meta.UUID},
+		Uuid:       &common.Uuid{Value: e.Meta.OrderUUID},
 		Number:     e.Meta.OrderNumber,
-		State:      e.Meta.OrderState,
-		UploadedAt: e.Meta.OrderUploadedAt,
-		AccountId:  e.Meta.OrderAccountID,
+		State:      entities.OrderStates(e.Meta.OrderState),
+		UploadedAt: timestamppb.New(t),
+		Account:    &entities.Account{Id: e.Meta.OrderAccountID},
 	}
 
 	event, err := proto.Marshal(&order)

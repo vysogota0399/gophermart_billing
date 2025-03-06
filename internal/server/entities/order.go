@@ -25,11 +25,26 @@ type OrdersRepository interface {
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
-var NewState = "NEW"
-var FailedState = "DAMMAGED"
-var ProcessedState = "PROCESSED"
-var ProcessingState = "PROCESSING"
-var InvalidState = "INVALID"
+const (
+	NewState        = "REGISTERED"
+	InvalidState    = "INVALID"
+	ProcessingState = "PROCESSING"
+	ProcessedState  = "PROCESSED"
+)
+
+var OrderStateValues = map[string]int32{
+	NewState:        0,
+	InvalidState:    1,
+	ProcessingState: 2,
+	ProcessedState:  3,
+}
+
+var OrderStateName = map[int32]string{
+	0: NewState,
+	1: InvalidState,
+	2: ProcessingState,
+	3: ProcessedState,
+}
 
 var StartEvent = "start"
 var CostAccrualeFailedEvent = "cost_cccruale_failed"
@@ -75,7 +90,7 @@ func (processor *OrderFSM) new(ctx context.Context, opt OrderFsmOption) (*Order,
 }
 
 func (processor *OrderFSM) terminate(ctx context.Context, container *Order) error {
-	container.State = FailedState
+	container.State = OrderStateValues[InvalidState]
 	processor.lg.DebugCtx(
 		ctx,
 		"terminate order",
@@ -86,7 +101,7 @@ func (processor *OrderFSM) terminate(ctx context.Context, container *Order) erro
 }
 
 func (processor *OrderFSM) send(ctx context.Context, event string, container *Order) error {
-	processor.fsm.SetState(container.Order.State)
+	processor.fsm.SetState(OrderStateName[container.Order.State])
 
 	processor.lg.DebugCtx(
 		ctx,
@@ -103,7 +118,7 @@ func (processor *OrderFSM) send(ctx context.Context, event string, container *Or
 		return fmt.Errorf("internal/server/entities/order invalid state error %w", err)
 	}
 
-	container.State = processor.fsm.Current()
+	container.State = OrderStateValues[processor.fsm.Current()]
 
 	processor.lg.DebugCtx(
 		ctx,
@@ -164,7 +179,7 @@ func (processor *OrderFSM) Create(ctx context.Context, opt OrderFsmOption) (*mod
 		return nil, err
 	}
 
-	container.State = NewState
+	container.State = OrderStateValues[NewState]
 
 	if err := processor.rep.CreateOrder(ctx, container.Order, container.tx); err != nil {
 		return nil, fmt.Errorf("internal/server/entities/order create order error %w", err)

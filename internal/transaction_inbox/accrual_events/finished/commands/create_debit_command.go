@@ -30,15 +30,15 @@ func NewCreateDebitCommand(orderFsm AccrualCreator, accounting DebitCreator, lg 
 	return &CreateDebitCommand{lg: lg, orderFsm: orderFsm, accounting: accounting}
 }
 
-func (cmd *CreateDebitCommand) Call(ctx context.Context, acc *events.FinishedEvent) (*models.Order, error) {
+func (cmd *CreateDebitCommand) Call(ctx context.Context, acc *events.AccrualFinishedEvent) (*models.Order, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "set_accrual_command"))
 	cmd.lg.DebugCtx(ctx, "update order state")
 
 	order, err := cmd.orderFsm.CostAccrualed(
 		ctx,
-		acc.Amount,
+		acc.Amount.Units,
 		entities.OrderFsmOption{
-			UUID: acc.OrderUuid,
+			UUID: acc.OrderUuid.Value,
 		},
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func (cmd *CreateDebitCommand) Call(ctx context.Context, acc *events.FinishedEve
 	cmd.lg.DebugCtx(ctx, "create transaction")
 
 	debit := &models.Transaction{
-		Amount:      acc.Amount,
+		Amount:      acc.Amount.Units,
 		Operation:   models.Debit,
 		OrderNumber: order.Number,
 		AccountID:   order.AccountID,

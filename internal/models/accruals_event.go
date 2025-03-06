@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	AccrualNewState        = "new"
-	AccrualProcessingState = "processing"
-	AccrualFinishedState   = "finished"
-	AccrualFailedState     = "failed"
+	AccrualNewState int32 = iota
+	AccrualProcessingState
+	AccrualFinishedState
+	AccrualFailedState
 )
 
 type AccrualEvent struct {
 	UUID  string            `json:"uuid"`
-	Name  string            `json:"event_name"`
-	State string            `json:"event_state"`
+	Name  int32             `json:"event_name"`
+	State int32             `json:"event_state"`
 	Meta  *AccrualEventMeta `json:"meta"`
 }
 

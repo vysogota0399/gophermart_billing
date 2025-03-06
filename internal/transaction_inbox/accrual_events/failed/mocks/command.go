@@ -37,7 +37,7 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 }
 
 // Call mocks base method.
-func (m *MockCommand) Call(arg0 context.Context, arg1 *events.FailedEvent) (*models.Order, error) {
+func (m *MockCommand) Call(arg0 context.Context, arg1 *events.AccrualFailedEvent) (*models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Call", arg0, arg1)
 	ret0, _ := ret[0].(*models.Order)

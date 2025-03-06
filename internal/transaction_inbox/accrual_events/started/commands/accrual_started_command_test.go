@@ -12,6 +12,7 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/server/entities"
 	"github.com/vysogota0399/gophermart_billing/internal/transaction_inbox/accrual_events/started/commands/mocks"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
 	events "github.com/vysogota0399/gophermart_protos/gen/events"
 )
 
@@ -20,7 +21,7 @@ func TestCreateDebitCommand_Call(t *testing.T) {
 		fsm *mocks.MockOrderFSM
 	}
 	type args struct {
-		event *events.StartedEvent
+		event *events.AccrualStartedEvent
 	}
 	type want struct {
 		err   bool
@@ -29,20 +30,23 @@ func TestCreateDebitCommand_Call(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		prepare func(f *fields, in *events.StartedEvent)
+		prepare func(f *fields, in *events.AccrualStartedEvent)
 		args    args
 		want    want
 	}{
 		{
 			name: "when order state updated",
 			args: args{
-				event: &events.StartedEvent{EventUuid: "event_uuid", OrderUuid: "order_uuid"},
+				event: &events.AccrualStartedEvent{
+					EventUuid: &common.Uuid{Value: "event_uuid"},
+					OrderUuid: &common.Uuid{Value: "order_uuid"},
+				},
 			},
-			prepare: func(f *fields, in *events.StartedEvent) {
+			prepare: func(f *fields, in *events.AccrualStartedEvent) {
 				f.fsm.EXPECT().Start(
 					gomock.Any(),
 					entities.OrderFsmOption{
-						UUID: in.OrderUuid,
+						UUID: in.OrderUuid.Value,
 					},
 				).Return(&models.Order{}, nil)
 			},
@@ -54,13 +58,16 @@ func TestCreateDebitCommand_Call(t *testing.T) {
 		{
 			name: "when update order state failed",
 			args: args{
-				event: &events.StartedEvent{EventUuid: "event_uuid", OrderUuid: "order_uuid"},
+				event: &events.AccrualStartedEvent{
+					EventUuid: &common.Uuid{Value: "event_uuid"},
+					OrderUuid: &common.Uuid{Value: "order_uuid"},
+				},
 			},
-			prepare: func(f *fields, in *events.StartedEvent) {
+			prepare: func(f *fields, in *events.AccrualStartedEvent) {
 				f.fsm.EXPECT().Start(
 					gomock.Any(),
 					entities.OrderFsmOption{
-						UUID: in.OrderUuid,
+						UUID: in.OrderUuid.Value,
 					},
 				).Return(nil, errors.New("error"))
 			},
@@ -87,7 +94,7 @@ func TestCreateDebitCommand_Call(t *testing.T) {
 			srv := NewAccrualStartedCommand(fields.fsm, lg)
 			order, err := srv.Call(
 				context.Background(),
-				&events.StartedEvent{
+				&events.AccrualStartedEvent{
 					EventUuid: tt.args.event.EventUuid,
 					OrderUuid: tt.args.event.OrderUuid},
 			)

@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS inbox_events(
   uuid uuid NOT NULL,
-  state VARCHAR NOT NULL,
+  State INT NOT NULL,
   name VARCHAR NOT NULL,
   message JSONB NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

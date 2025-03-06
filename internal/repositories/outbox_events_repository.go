@@ -6,13 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/storage"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
+	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var OrderCreatedEventName = "order_created"
@@ -38,12 +40,12 @@ func (rep *OutboxEventsRepository) OrderCreated(ctx context.Context, order *mode
 	var message []byte
 
 	e := &events.OrderCreated{
-		EventUuid:  uuid.NewV4().String(),
-		Uuid:       order.UUID,
+		EventUuid:  &common.Uuid{Value: uuid.NewV4().String()},
+		Uuid:       &common.Uuid{Value: order.UUID},
 		Number:     order.Number,
-		UploadedAt: order.UploadedAt.Format(time.RFC3339Nano),
-		State:      order.State,
-		AccountId:  order.AccountID,
+		UploadedAt: timestamppb.New(order.UploadedAt),
+		State:      entities.OrderStates(order.State),
+		Account:    &entities.Account{Id: order.AccountID},
 	}
 
 	message, err := json.Marshal(e)
@@ -67,9 +69,9 @@ func (rep *OutboxEventsRepository) OrderUpdated(ctx context.Context, order *mode
 	var message []byte
 
 	e := &events.OrderUpdated{
-		EventUuid: uuid.NewV4().String(),
-		Uuid:      order.UUID,
-		State:     order.State,
+		EventUuid: &common.Uuid{Value: uuid.NewV4().String()},
+		Uuid:      &common.Uuid{Value: order.UUID},
+		State:     entities.OrderStates(order.State),
 	}
 
 	message, err := json.Marshal(e)

@@ -16,7 +16,7 @@ type Meta struct {
 	OrderUUID       string `json:"uuid,omitempty"`
 	OrderNumber     string `json:"number,omitempty"`
 	OrderUploadedAt string `json:"uploaded_at,omitempty"`
-	OrderState      string `json:"state,omitempty"`
+	OrderState      int32  `json:"state,omitempty"`
 	OrderAccountID  int64  `json:"account_id,omitempty"`
 	Error           string `json:"error,omitempty"`
 }

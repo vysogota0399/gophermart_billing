@@ -24,14 +24,14 @@ func NewAccrualFailedCommand(orderFsm AccrualFailder, lg *logging.ZapLogger) *Ac
 	return &AccrualFailedCommand{lg: lg, orderFsm: orderFsm}
 }
 
-func (cmd *AccrualFailedCommand) Call(ctx context.Context, acc *events.FailedEvent) (*models.Order, error) {
+func (cmd *AccrualFailedCommand) Call(ctx context.Context, acc *events.AccrualFailedEvent) (*models.Order, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "accural_failed_command"))
 	cmd.lg.DebugCtx(ctx, "cost accural failed", zap.Any("order_uuid", acc.OrderUuid))
 
 	order, err := cmd.orderFsm.CostAccrualFailed(
 		ctx,
 		entities.OrderFsmOption{
-			UUID: acc.OrderUuid,
+			UUID: acc.OrderUuid.Value,
 		},
 	)
 	if err != nil {

@@ -19,7 +19,7 @@ func TestCreateOrderCommand_CreateOrder(t *testing.T) {
 		srv *mocks.MockCreateOrderService
 	}
 	type args struct {
-		order *create_order.NewOrder
+		order *create_order.CreateNewOrderParams
 	}
 	tests := []struct {
 		name    string
@@ -30,18 +30,18 @@ func TestCreateOrderCommand_CreateOrder(t *testing.T) {
 	}{
 		{
 			name:    "when services succeeded",
-			args:    args{&create_order.NewOrder{}},
+			args:    args{&create_order.CreateNewOrderParams{}},
 			prepare: func(f *fields, err error) { f.srv.EXPECT().Call(gomock.Any(), gomock.All()).Return(nil, err) },
 		},
 		{
 			name:    "when services failed",
-			args:    args{&create_order.NewOrder{}},
+			args:    args{&create_order.CreateNewOrderParams{}},
 			prepare: func(f *fields, err error) { f.srv.EXPECT().Call(gomock.Any(), gomock.All()).Return(nil, err) },
 			wantErr: ErrStub,
 		},
 		{
 			name:    "when order with same number already exists",
-			args:    args{&create_order.NewOrder{}},
+			args:    args{&create_order.CreateNewOrderParams{}},
 			prepare: func(f *fields, err error) { f.srv.EXPECT().Call(gomock.Any(), gomock.All()).Return(nil, err) },
 			wantErr: ErrOrderAlreadtExists,
 		},
@@ -60,7 +60,7 @@ func TestCreateOrderCommand_CreateOrder(t *testing.T) {
 			tt.prepare(&fields, tt.wantErr)
 
 			comm := NewCreateOrderCommand(mockSrv, lg)
-			_, err := comm.Create(context.Background(), &create_order.NewOrder{})
+			_, err := comm.Create(context.Background(), &create_order.CreateNewOrderParams{})
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

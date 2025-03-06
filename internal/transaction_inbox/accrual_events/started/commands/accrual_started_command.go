@@ -24,9 +24,9 @@ func NewAccrualStartedCommand(orderFsm OrderFSM, lg *logging.ZapLogger) *Accrual
 	return &AccrualStartedCommand{lg: lg, orderFsm: orderFsm}
 }
 
-func (cmd *AccrualStartedCommand) Call(ctx context.Context, acc *events.StartedEvent) (*models.Order, error) {
+func (cmd *AccrualStartedCommand) Call(ctx context.Context, acc *events.AccrualStartedEvent) (*models.Order, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "accrual_started_command"))
-	order, err := cmd.orderFsm.Start(ctx, entities.OrderFsmOption{UUID: acc.OrderUuid})
+	order, err := cmd.orderFsm.Start(ctx, entities.OrderFsmOption{UUID: acc.OrderUuid.Value})
 	if err != nil {
 		return nil, fmt.Errorf("accruals/started/Accrual_started_command set order started error %w", err)
 	}

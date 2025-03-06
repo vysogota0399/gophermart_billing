@@ -30,15 +30,15 @@ type Consumer struct {
 }
 
 type AccrualFailedHandler interface {
-	Call(ctx context.Context, event *events.FailedEvent)
+	Call(ctx context.Context, event *events.AccrualFailedEvent)
 }
 
 type AccrualFinishedHandler interface {
-	Call(ctx context.Context, event *events.FinishedEvent)
+	Call(ctx context.Context, event *events.AccrualFinishedEvent)
 }
 
 type AccrualStartedHandler interface {
-	Call(ctx context.Context, event *events.StartedEvent)
+	Call(ctx context.Context, event *events.AccrualStartedEvent)
 }
 
 type InboxEventsRepository interface {
@@ -150,12 +150,12 @@ func (cns *Consumer) saveEvent(ctx context.Context, m *kafka.Message) (eventHand
 	switch message := payload.Event.(type) {
 	case *events.AccrualProcessed_FailedEvent:
 		event = &models.AccrualEvent{
-			UUID:  message.FailedEvent.EventUuid,
+			UUID:  message.FailedEvent.EventUuid.Value,
 			Name:  repositories.AccrualFailedEventName,
 			State: models.AccrualNewState,
 			Meta: &models.AccrualEventMeta{
-				EventUUID:   message.FailedEvent.EventUuid,
-				OrderUUID:   message.FailedEvent.OrderUuid,
+				EventUUID:   message.FailedEvent.EventUuid.Value,
+				OrderUUID:   message.FailedEvent.OrderUuid.Value,
 				OrderNumber: message.FailedEvent.OrderNumber,
 			},
 		}
@@ -164,14 +164,14 @@ func (cns *Consumer) saveEvent(ctx context.Context, m *kafka.Message) (eventHand
 		}
 	case *events.AccrualProcessed_FinishedEvent:
 		event = &models.AccrualEvent{
-			UUID:  message.FinishedEvent.EventUuid,
+			UUID:  message.FinishedEvent.EventUuid.Value,
 			Name:  repositories.AccrualFinishedEventName,
 			State: models.AccrualNewState,
 			Meta: &models.AccrualEventMeta{
-				EventUUID:   message.FinishedEvent.EventUuid,
-				OrderUUID:   message.FinishedEvent.OrderUuid,
+				EventUUID:   message.FinishedEvent.EventUuid.Value,
+				OrderUUID:   message.FinishedEvent.OrderUuid.Value,
 				OrderNumber: message.FinishedEvent.OrderNumber,
-				Amount:      message.FinishedEvent.Amount,
+				Amount:      message.FinishedEvent.Amount.Units,
 			},
 		}
 
@@ -180,12 +180,12 @@ func (cns *Consumer) saveEvent(ctx context.Context, m *kafka.Message) (eventHand
 		}
 	case *events.AccrualProcessed_StartedEvent:
 		event = &models.AccrualEvent{
-			UUID:  message.StartedEvent.EventUuid,
+			UUID:  message.StartedEvent.EventUuid.Value,
 			Name:  repositories.AccrualStartedEventName,
 			State: models.AccrualNewState,
 			Meta: &models.AccrualEventMeta{
-				EventUUID:   message.StartedEvent.EventUuid,
-				OrderUUID:   message.StartedEvent.OrderUuid,
+				EventUUID:   message.StartedEvent.EventUuid.Value,
+				OrderUUID:   message.StartedEvent.OrderUuid.Value,
 				OrderNumber: message.StartedEvent.OrderNumber,
 			},
 		}

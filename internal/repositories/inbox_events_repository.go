@@ -11,9 +11,11 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/storage"
 )
 
-var AccrualFailedEventName = "accrual_failed"
-var AccrualFinishedEventName = "accrual_finished"
-var AccrualStartedEventName = "accrual_started"
+const (
+	AccrualFailedEventName int32 = iota
+	AccrualFinishedEventName
+	AccrualStartedEventName
+)
 
 type InboxEventsRepository struct {
 	strg InboxEventsStorage
@@ -55,7 +57,7 @@ func (rep *InboxEventsRepository) ReserveEvent(ctx context.Context, eventName st
 		return nil, fmt.Errorf("inbox_events_repository: select event error %w", err)
 	}
 
-	if err := rep.setStateTX(ctx, e.UUID, models.AccrualFailedState, tx); err != nil {
+	if err := rep.setStatusTX(ctx, e.UUID, models.AccrualFailedState, tx); err != nil {
 		return nil, fmt.Errorf("inbox_events_repository: set new state error %w", err)
 	}
 
@@ -66,9 +68,9 @@ func (rep *InboxEventsRepository) ReserveEvent(ctx context.Context, eventName st
 	return e, nil
 }
 
-func (rep *InboxEventsRepository) SetState(ctx context.Context, uuid string, newState string, txs ...*sql.Tx) error {
+func (rep *InboxEventsRepository) SetStatus(ctx context.Context, uuid string, newStatus int32, txs ...*sql.Tx) error {
 	if len(txs) == 1 {
-		return rep.setStateTX(ctx, uuid, newState, txs[0])
+		return rep.setStatusTX(ctx, uuid, newStatus, txs[0])
 	}
 
 	if _, err := rep.strg.ExecContext(ctx,
@@ -77,21 +79,21 @@ func (rep *InboxEventsRepository) SetState(ctx context.Context, uuid string, new
 																			SET state = $1
 																			WHERE uuid = $2
 																		`,
-		newState, uuid); err != nil {
+		newStatus, uuid); err != nil {
 		return fmt.Errorf("inbox_events_repository: update event state error %w", err)
 	}
 
 	return nil
 }
 
-func (rep *InboxEventsRepository) setStateTX(ctx context.Context, uuid string, newState string, tx *sql.Tx) error {
+func (rep *InboxEventsRepository) setStatusTX(ctx context.Context, uuid string, newStatus int32, tx *sql.Tx) error {
 	if _, err := tx.ExecContext(ctx,
 		`
 																			UPDATE inbox_events
 																			SET state = $1
 																			WHERE uuid = $2
 																		`,
-		newState, uuid); err != nil {
+		newStatus, uuid); err != nil {
 		return fmt.Errorf("inbox_events_repository: update event state error %w", err)
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/server/entities"
 	"github.com/vysogota0399/gophermart_billing/internal/transaction_inbox/accrual_events/failed/commands/mocks"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
 	events "github.com/vysogota0399/gophermart_protos/gen/events"
 )
 
@@ -20,7 +21,7 @@ func TestAccrualFailedCommand_Call(t *testing.T) {
 		fsm *mocks.MockAccrualFailder
 	}
 	type args struct {
-		event *events.FailedEvent
+		event *events.AccrualFailedEvent
 	}
 	type want struct {
 		err   bool
@@ -29,7 +30,7 @@ func TestAccrualFailedCommand_Call(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		prepare func(f *fields, in *events.FailedEvent)
+		prepare func(f *fields, in *events.AccrualFailedEvent)
 		args    args
 		want    want
 	}{
@@ -37,13 +38,16 @@ func TestAccrualFailedCommand_Call(t *testing.T) {
 		{
 			name: "when order state updated",
 			args: args{
-				event: &events.FailedEvent{EventUuid: "event_uuid", OrderUuid: "order_uuid"},
+				event: &events.AccrualFailedEvent{
+					EventUuid: &common.Uuid{Value: "event_uuid"},
+					OrderUuid: &common.Uuid{Value: "order_uuid"},
+				},
 			},
-			prepare: func(f *fields, in *events.FailedEvent) {
+			prepare: func(f *fields, in *events.AccrualFailedEvent) {
 				f.fsm.EXPECT().CostAccrualFailed(
 					gomock.Any(),
 					entities.OrderFsmOption{
-						UUID: in.OrderUuid,
+						UUID: in.OrderUuid.Value,
 					},
 				).Return(&models.Order{}, nil)
 			},
@@ -55,13 +59,16 @@ func TestAccrualFailedCommand_Call(t *testing.T) {
 		{
 			name: "when order state updated",
 			args: args{
-				event: &events.FailedEvent{EventUuid: "event_uuid", OrderUuid: "order_uuid"},
+				event: &events.AccrualFailedEvent{
+					EventUuid: &common.Uuid{Value: "event_uuid"},
+					OrderUuid: &common.Uuid{Value: "order_uuid"},
+				},
 			},
-			prepare: func(f *fields, in *events.FailedEvent) {
+			prepare: func(f *fields, in *events.AccrualFailedEvent) {
 				f.fsm.EXPECT().CostAccrualFailed(
 					gomock.Any(),
 					entities.OrderFsmOption{
-						UUID: in.OrderUuid,
+						UUID: in.OrderUuid.Value,
 					},
 				).Return(nil, errors.New("error"))
 			},

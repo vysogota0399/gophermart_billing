@@ -9,8 +9,8 @@ import (
 	"github.com/vysogota0399/gophermart_protos/gen/commands/withdraw"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
 )
 
 type WithdrawCommand struct {
