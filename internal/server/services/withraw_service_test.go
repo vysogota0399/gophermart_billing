@@ -14,6 +14,7 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/server/services/mocks"
 	"github.com/vysogota0399/gophermart_protos/gen/commands/withdraw"
+	"google.golang.org/genproto/googleapis/type/money"
 )
 
 func TestWithdrawService_Call(t *testing.T) {
@@ -59,7 +60,7 @@ func TestWithdrawService_Call(t *testing.T) {
 			want: want{
 				err: ErrNotEnoughFunds,
 			},
-			args: args{&withdraw.WithdrawParams{Amount: 9999}},
+			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 9999}}},
 		},
 		{
 			name: "when save withdraw error",
@@ -74,7 +75,7 @@ func TestWithdrawService_Call(t *testing.T) {
 			want: want{
 				err: &pgconn.PgError{Code: pgerrcode.SerializationFailure},
 			},
-			args: args{&withdraw.WithdrawParams{Amount: 0}},
+			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 0}}},
 		},
 		{
 			name: "when succeeded",
@@ -88,7 +89,7 @@ func TestWithdrawService_Call(t *testing.T) {
 				f.wdRep.EXPECT().CommitTX(tx).Times(1)
 			},
 			want: want{},
-			args: args{&withdraw.WithdrawParams{Amount: 0}},
+			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 0}}},
 		},
 	}
 

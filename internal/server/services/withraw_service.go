@@ -48,19 +48,19 @@ func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.WithdrawParam
 		}
 		defer rep.RollbackTX(tx)
 
-		balance, err := rep.BalanceForUpdate(ctx, wd.AccountId, tx)
+		balance, err := rep.BalanceForUpdate(ctx, wd.Account.Id, tx)
 		if err != nil {
 			return fmt.Errorf("internal/server/services/withreaw_service withraw calculate blaance error %w", err)
 		}
 
-		withdraw_amount := int64(wd.Amount * 100)
+		withdraw_amount := int64(wd.Amount.GetUnits() * 100)
 		srv.lg.DebugCtx(
 			ctx,
 			"withdraw debug information",
 			zap.String("result", "failed"),
 			zap.Int64("current_balance", balance),
 			zap.Int64("withdtaw_amount", withdraw_amount),
-			zap.Int64("account_id", wd.AccountId),
+			zap.Int64("account_id", wd.Account.Id),
 		)
 
 		if balance < withdraw_amount {
@@ -71,7 +71,7 @@ func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.WithdrawParam
 			Amount:      withdraw_amount,
 			Operation:   models.Credit,
 			OrderNumber: wd.OrderNumber,
-			AccountID:   wd.AccountId,
+			AccountID:   wd.Account.Id,
 			ProcessedAt: time.Now().Local(),
 		}
 

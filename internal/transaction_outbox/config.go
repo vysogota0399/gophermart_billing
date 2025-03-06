@@ -15,7 +15,7 @@ type Config struct {
 }
 
 func MustNewConfig() *Config {
-	c := &Config{}
+	c := new(Config)
 	env.Parse(c)
 
 	return c
