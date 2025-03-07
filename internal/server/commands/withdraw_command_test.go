@@ -55,7 +55,7 @@ func TestWithdrawCommand_Withdraw(t *testing.T) {
 			tt.prepare(&fields, tt.wantErr)
 
 			comm := NewCreateWithdrawCommand(mockSrv, lg)
-			_, err := comm.DoWithdraw(context.Background(), &withdraw.WithdrawParams{})
+			_, err := comm.DoWithdraw(context.Background(), &withdraw.DoWithdrawParams{})
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

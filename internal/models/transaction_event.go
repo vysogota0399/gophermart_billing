@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/vysogota0399/gophermart_protos/utils/amount"
+	"google.golang.org/genproto/googleapis/type/money"
 )
 
 type TransactionEvent struct {
@@ -17,7 +20,8 @@ type TransactionEventMeta struct {
 	TransactionUUID string    `json:"transaction_uuid,omitempty"`
 	OrderNumber     string    `json:"number,omitempty"`
 	AccountID       int64     `json:"accountID,omitempty"`
-	Amount          int64     `json:"amount,omitempty"`
+	AmountUnits     int64     `json:"amoun_units,omitempty"`
+	AmountNanos     int32     `json:"amoun_nanos,omitempty"`
 	Operation       string    `json:"operation,omitempty"`
 	ProcessedAt     time.Time `json:"processed_at"`
 	Error           string    `json:"error,omitempty"`
@@ -35,4 +39,8 @@ func (m *TransactionEventMeta) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(b, &m)
+}
+
+func (m *TransactionEventMeta) Amount() *amount.Amount {
+	return amount.New(&money.Money{Nanos: m.AmountNanos, Units: m.AmountUnits})
 }

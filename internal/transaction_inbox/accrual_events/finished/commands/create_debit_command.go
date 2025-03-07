@@ -3,12 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/server/entities"
 	events "github.com/vysogota0399/gophermart_protos/gen/events"
+	"github.com/vysogota0399/gophermart_protos/utils/amount"
 	"go.uber.org/zap"
 )
 
@@ -48,13 +48,11 @@ func (cmd *CreateDebitCommand) Call(ctx context.Context, acc *events.AccrualFini
 	cmd.lg.DebugCtx(ctx, "update order state - finished")
 	cmd.lg.DebugCtx(ctx, "create transaction")
 
-	debit := &models.Transaction{
-		Amount:      acc.Amount.Units,
-		Operation:   models.Debit,
-		OrderNumber: order.Number,
-		AccountID:   order.AccountID,
-		ProcessedAt: time.Now().Local(),
-	}
+	debit := models.NewDebit(
+		amount.New(acc.Amount),
+		order.AccountID,
+		order.Number,
+	)
 
 	if err := cmd.accounting.Create(ctx, debit); err != nil {
 		return nil, fmt.Errorf("set_accrual_command: create transaction error %w", err)

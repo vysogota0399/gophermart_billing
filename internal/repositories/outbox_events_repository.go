@@ -101,7 +101,8 @@ func (rep *OutboxEventsRepository) NewTransactionProcessedTX(ctx context.Context
 		TransactionUUID: in.UUID,
 		OrderNumber:     in.OrderNumber,
 		AccountID:       in.AccountID,
-		Amount:          in.Amount,
+		AmountUnits:     in.Amount.Money.Units,
+		AmountNanos:     in.Amount.Money.Nanos,
 		Operation:       in.Operation,
 		ProcessedAt:     in.ProcessedAt,
 	}

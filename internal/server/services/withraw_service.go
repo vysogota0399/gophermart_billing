@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_protos/gen/commands/withdraw"
+	"github.com/vysogota0399/gophermart_protos/utils/amount"
 	"go.uber.org/zap"
 )
 
@@ -36,10 +36,10 @@ func NewWithdrawService(rep WithdrawRepository, lg *logging.ZapLogger) *Withdraw
 var ErrNotEnoughFunds error = errors.New("internal/server/services/withreaw_service not enough funds error")
 var ErrAccountDeadlock error = errors.New("internal/server/services/withreaw_service lock_not_available error")
 
-func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.WithdrawParams) error {
+func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.DoWithdrawParams) error {
 	process := func(
 		ctx context.Context,
-		wd *withdraw.WithdrawParams,
+		wd *withdraw.DoWithdrawParams,
 	) error {
 		rep := srv.rep
 		tx, err := rep.BeginTX(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
@@ -53,27 +53,26 @@ func (srv *WithdrawService) Call(ctx context.Context, wd *withdraw.WithdrawParam
 			return fmt.Errorf("internal/server/services/withreaw_service withraw calculate blaance error %w", err)
 		}
 
-		withdraw_amount := int64(wd.Amount.GetUnits() * 100)
+		withdraw_amount := amount.New(wd.Amount)
 		srv.lg.DebugCtx(
 			ctx,
 			"withdraw debug information",
 			zap.String("result", "failed"),
 			zap.Int64("current_balance", balance),
-			zap.Int64("withdtaw_amount", withdraw_amount),
+			zap.Int64("withdtaw_units", withdraw_amount.Money.Units),
+			zap.Int32("withdtaw_nanos", withdraw_amount.Money.Nanos),
 			zap.Int64("account_id", wd.Account.Id),
 		)
 
-		if balance < withdraw_amount {
+		if balance < withdraw_amount.NanoBonuses() {
 			return ErrNotEnoughFunds
 		}
 
-		credit := &models.Transaction{
-			Amount:      withdraw_amount,
-			Operation:   models.Credit,
-			OrderNumber: wd.OrderNumber,
-			AccountID:   wd.Account.Id,
-			ProcessedAt: time.Now().Local(),
-		}
+		credit := models.NewCredit(
+			withdraw_amount,
+			wd.Account.Id,
+			wd.OrderNumber,
+		)
 
 		if err := srv.rep.CreateTX(ctx, credit, tx); err != nil {
 			return fmt.Errorf("internal/server/services/withreaw_service withraw error %w", err)

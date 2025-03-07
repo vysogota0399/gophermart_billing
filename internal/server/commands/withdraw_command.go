@@ -9,8 +9,8 @@ import (
 	"github.com/vysogota0399/gophermart_protos/gen/commands/withdraw"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type WithdrawCommand struct {
@@ -24,12 +24,12 @@ func NewCreateWithdrawCommand(srv WithdrawService, lg *logging.ZapLogger) *Withd
 }
 
 type WithdrawService interface {
-	Call(context.Context, *withdraw.WithdrawParams) error
+	Call(context.Context, *withdraw.DoWithdrawParams) error
 }
 
 var ErrWithdrawInternalError = status.Error(codes.Internal, "internal error")
 
-func (cmd *WithdrawCommand) DoWithdraw(ctx context.Context, wp *withdraw.WithdrawParams) (*withdraw.WithdrawResponse, error) {
+func (cmd *WithdrawCommand) DoWithdraw(ctx context.Context, wp *withdraw.DoWithdrawParams) (*withdraw.DoWithdrawParams, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "order_service_command"))
 	if err := cmd.srv.Call(ctx, wp); err != nil {
 		if errors.Is(err, services.ErrNotEnoughFunds) {

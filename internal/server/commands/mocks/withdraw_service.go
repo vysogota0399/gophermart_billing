@@ -36,7 +36,7 @@ func (m *MockWithdrawService) EXPECT() *MockWithdrawServiceMockRecorder {
 }
 
 // Call mocks base method.
-func (m *MockWithdrawService) Call(arg0 context.Context, arg1 *withdraw.WithdrawParams) error {
+func (m *MockWithdrawService) Call(arg0 context.Context, arg1 *withdraw.DoWithdrawParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Call", arg0, arg1)
 	ret0, _ := ret[0].(error)

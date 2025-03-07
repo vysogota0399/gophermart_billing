@@ -13,7 +13,6 @@ import (
 	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
 	"go.uber.org/zap"
-	"google.golang.org/genproto/googleapis/type/money"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -55,13 +54,13 @@ func (p *Publisher) Publish(ctx context.Context, e *models.TransactionEvent) err
 	order := events.TransactionProcessed{
 		EventUuid:   &common.Uuid{Value: e.Meta.UUID},
 		Uuid:        &common.Uuid{Value: e.Meta.TransactionUUID},
-		Amount:      &money.Money{Units: e.Meta.Amount},
+		Amount:      e.Meta.Amount().Money,
 		Account:     &entities.Account{Id: e.Meta.AccountID},
 		OrderNumber: e.Meta.OrderNumber,
 		Operation:   operation,
 		ProcessedAt: timestamppb.New(e.Meta.ProcessedAt),
 	}
-	
+
 	event, err := proto.Marshal(&order)
 	if err != nil {
 		return fmt.Errorf("transaction_events/created/publisher: marashal failed  %w", err)

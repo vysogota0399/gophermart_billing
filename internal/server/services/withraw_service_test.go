@@ -14,6 +14,7 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/server/services/mocks"
 	"github.com/vysogota0399/gophermart_protos/gen/commands/withdraw"
+	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	"google.golang.org/genproto/googleapis/type/money"
 )
 
@@ -22,7 +23,7 @@ func TestWithdrawService_Call(t *testing.T) {
 		wdRep *mocks.MockWithdrawRepository
 	}
 	type args struct {
-		wd *withdraw.WithdrawParams
+		wd *withdraw.DoWithdrawParams
 	}
 	type want struct {
 		err error
@@ -46,7 +47,7 @@ func TestWithdrawService_Call(t *testing.T) {
 			want: want{
 				err: errors.New("calc balance error"),
 			},
-			args: args{&withdraw.WithdrawParams{}},
+			args: args{&withdraw.DoWithdrawParams{Amount: &money.Money{Units: 9999}, Account: &entities.Account{}}},
 		},
 		{
 			name: "when invalid balance error",
@@ -60,7 +61,7 @@ func TestWithdrawService_Call(t *testing.T) {
 			want: want{
 				err: ErrNotEnoughFunds,
 			},
-			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 9999}}},
+			args: args{&withdraw.DoWithdrawParams{Amount: &money.Money{Units: 9999}, Account: &entities.Account{}}},
 		},
 		{
 			name: "when save withdraw error",
@@ -75,7 +76,7 @@ func TestWithdrawService_Call(t *testing.T) {
 			want: want{
 				err: &pgconn.PgError{Code: pgerrcode.SerializationFailure},
 			},
-			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 0}}},
+			args: args{&withdraw.DoWithdrawParams{Amount: &money.Money{Units: 0}, Account: &entities.Account{}}},
 		},
 		{
 			name: "when succeeded",
@@ -89,7 +90,7 @@ func TestWithdrawService_Call(t *testing.T) {
 				f.wdRep.EXPECT().CommitTX(tx).Times(1)
 			},
 			want: want{},
-			args: args{&withdraw.WithdrawParams{Amount: &money.Money{Units: 0}}},
+			args: args{&withdraw.DoWithdrawParams{Amount: &money.Money{Units: 0}, Account: &entities.Account{}}},
 		},
 	}
 

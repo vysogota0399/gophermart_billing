@@ -64,7 +64,7 @@ func (rep *AccountingRepository) CreateTX(ctx context.Context, in *models.Transa
 			VALUES ($1, $2, $3, $4, $5)
 			RETURNING created_at
 		`,
-		in.UUID, in.OrderNumber, in.AccountID, in.Amount, in.Operation,
+		in.UUID, in.OrderNumber, in.AccountID, in.Amount.NanoBonuses(), in.Operation,
 	)
 
 	if err := row.Scan(&in.ProcessedAt); err != nil {

@@ -10,9 +10,11 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/config"
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
-	"github.com/vysogota0399/gophermart_billing/internal/server/entities"
+	sm "github.com/vysogota0399/gophermart_billing/internal/server/entities"
 	"github.com/vysogota0399/gophermart_billing/internal/server/services/mocks"
 	"github.com/vysogota0399/gophermart_protos/gen/commands/create_order"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
+	"github.com/vysogota0399/gophermart_protos/gen/entities"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -37,12 +39,12 @@ func TestCreateOrderService_Call(t *testing.T) {
 		{
 			name: "when update order state",
 			args: args{
-				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now()},
+				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now(), Uuid: &common.Uuid{}, Account: &entities.Account{}},
 			},
 			prepare: func(f *fields, in *create_order.CreateNewOrderParams) {
 				f.fsm.EXPECT().Create(
 					gomock.Any(),
-					entities.OrderFsmOption{
+					sm.OrderFsmOption{
 						Order: &models.Order{
 							UUID:       in.Uuid.Value,
 							Number:     in.Number,
@@ -60,12 +62,12 @@ func TestCreateOrderService_Call(t *testing.T) {
 		{
 			name: "when create order failed",
 			args: args{
-				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now()},
+				Order: &create_order.CreateNewOrderParams{UploadedAt: timestamppb.Now(), Uuid: &common.Uuid{}, Account: &entities.Account{}},
 			},
 			prepare: func(f *fields, in *create_order.CreateNewOrderParams) {
 				f.fsm.EXPECT().Create(
 					gomock.Any(),
-					entities.OrderFsmOption{
+					sm.OrderFsmOption{
 						Order: &models.Order{
 							UUID:       in.Uuid.Value,
 							Number:     in.Number,
