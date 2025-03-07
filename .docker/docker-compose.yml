@@ -1,0 +1,40 @@
+x-app: &app
+  labels:
+    logging: "promtail"
+    logging_jobname: "containerlogs"
+  build:
+    context: ../
+    dockerfile: .docker/Dockerfile
+  tty: true
+  stdin_open: true
+  environment:
+    - LOG_LEVEL=-1
+    - DATABASE_DSN=postgres://postgres:secret@db:5432/gophermart_billing_development
+    - KAFKA_BROKERS=kafka-1:9092,kafka-2:9092,kafka-3:9092
+    - ORDERS_SERVER_HTTP_ADDRESS=0.0.0.0:8010
+    - AccountingServerHTTPAddress=0.0.0.0:8020
+    - DAEMON_ACCRUALS_WORKERS_COUNT=1
+    - DAEMON_ACCRUAL_FINISHED_EVENT_POLL_INTERVAL=100
+    - DAEMON_ACCRUAL_FAILED_EVENT_POLL_INTERVAL=100
+    - DAEMON_ACCRUAL_STARTED_EVENT_POLL_INTERVAL=100
+    - KAFKA_ACCRUAL_FAILED_MAX_WAIT_INTERVAL=1000
+    - KAFKA_ACCRUAL_STARTED_MAX_WAIT_INTERVAL=1000
+    - KAFKA_ACCRUAL_FINISHED_MAX_WAIT_INTERVAL=1000
+services:
+  billing_sync_commands:
+    <<: *app
+    container_name: gophermart-billing_sync_commands
+    command:
+      ./billing_sync_commands
+  
+  billing_consumer:
+    <<: *app
+    container_name: gophermart-billing_accrual_finished_sonsumer
+    command:
+      ./billing_accrual_finished_command
+    depends_on:
+      - billing_sync_commands
+
+networks:
+  default:
+    name: gophermart-network
