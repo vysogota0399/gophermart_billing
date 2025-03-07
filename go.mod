@@ -10,9 +10,10 @@ require (
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.10.0
-	github.com/vysogota0399/gophermart_protos v0.5.0
+	github.com/vysogota0399/gophermart_protos v1.0.1
 	go.uber.org/fx v1.23.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250219182151-9fdb1cabc7b2
+	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250227231956-55c901821b1e
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 )
