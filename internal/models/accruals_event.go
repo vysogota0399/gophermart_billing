@@ -14,7 +14,7 @@ const (
 
 type AccrualEvent struct {
 	UUID  string            `json:"uuid"`
-	Name  int32             `json:"event_name"`
+	Name  string            `json:"event_name"`
 	State int32             `json:"event_state"`
 	Meta  *AccrualEventMeta `json:"meta"`
 }

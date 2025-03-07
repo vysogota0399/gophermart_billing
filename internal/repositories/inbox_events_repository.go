@@ -9,12 +9,13 @@ import (
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/storage"
+	"go.uber.org/zap"
 )
 
 const (
-	AccrualFailedEventName int32 = iota
-	AccrualFinishedEventName
-	AccrualStartedEventName
+	AccrualFailedEventName   string = "accrual_failed"
+	AccrualFinishedEventName string = "accrual_finished"
+	AccrualStartedEventName  string = "accrual_started"
 )
 
 type InboxEventsRepository struct {
@@ -57,7 +58,7 @@ func (rep *InboxEventsRepository) ReserveEvent(ctx context.Context, eventName st
 		return nil, fmt.Errorf("inbox_events_repository: select event error %w", err)
 	}
 
-	if err := rep.setStatusTX(ctx, e.UUID, models.AccrualFailedState, tx); err != nil {
+	if err := rep.setStateTx(ctx, e.UUID, models.AccrualFailedState, tx); err != nil {
 		return nil, fmt.Errorf("inbox_events_repository: set new state error %w", err)
 	}
 
@@ -68,9 +69,9 @@ func (rep *InboxEventsRepository) ReserveEvent(ctx context.Context, eventName st
 	return e, nil
 }
 
-func (rep *InboxEventsRepository) SetStatus(ctx context.Context, uuid string, newStatus int32, txs ...*sql.Tx) error {
+func (rep *InboxEventsRepository) SetState(ctx context.Context, uuid string, newState int32, txs ...*sql.Tx) error {
 	if len(txs) == 1 {
-		return rep.setStatusTX(ctx, uuid, newStatus, txs[0])
+		return rep.setStateTx(ctx, uuid, newState, txs[0])
 	}
 
 	if _, err := rep.strg.ExecContext(ctx,
@@ -79,21 +80,21 @@ func (rep *InboxEventsRepository) SetStatus(ctx context.Context, uuid string, ne
 																			SET state = $1
 																			WHERE uuid = $2
 																		`,
-		newStatus, uuid); err != nil {
+		newState, uuid); err != nil {
 		return fmt.Errorf("inbox_events_repository: update event state error %w", err)
 	}
 
 	return nil
 }
 
-func (rep *InboxEventsRepository) setStatusTX(ctx context.Context, uuid string, newStatus int32, tx *sql.Tx) error {
+func (rep *InboxEventsRepository) setStateTx(ctx context.Context, uuid string, newState int32, tx *sql.Tx) error {
 	if _, err := tx.ExecContext(ctx,
 		`
 																			UPDATE inbox_events
 																			SET state = $1
 																			WHERE uuid = $2
 																		`,
-		newStatus, uuid); err != nil {
+		newState, uuid); err != nil {
 		return fmt.Errorf("inbox_events_repository: update event state error %w", err)
 	}
 
@@ -101,6 +102,7 @@ func (rep *InboxEventsRepository) setStatusTX(ctx context.Context, uuid string, 
 }
 
 func (rep *InboxEventsRepository) SaveAccrualEvent(ctx context.Context, in *models.AccrualEvent) error {
+	rep.lg.DebugCtx(ctx, "save event", zap.Any("event", in))
 	if _, err := rep.strg.ExecContext(ctx,
 		`
 			INSERT INTO inbox_events (uuid, state, name, message)

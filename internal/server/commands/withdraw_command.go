@@ -11,6 +11,7 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type WithdrawCommand struct {
@@ -29,7 +30,7 @@ type WithdrawService interface {
 
 var ErrWithdrawInternalError = status.Error(codes.Internal, "internal error")
 
-func (cmd *WithdrawCommand) DoWithdraw(ctx context.Context, wp *withdraw.DoWithdrawParams) (*withdraw.DoWithdrawParams, error) {
+func (cmd *WithdrawCommand) DoWithdraw(ctx context.Context, wp *withdraw.DoWithdrawParams) (*emptypb.Empty, error) {
 	ctx = cmd.lg.WithContextFields(ctx, zap.String("actor", "order_service_command"))
 	if err := cmd.srv.Call(ctx, wp); err != nil {
 		if errors.Is(err, services.ErrNotEnoughFunds) {
@@ -56,5 +57,5 @@ func (cmd *WithdrawCommand) DoWithdraw(ctx context.Context, wp *withdraw.DoWithd
 		return nil, errors.Join(ErrWithdrawInternalError, err)
 	}
 
-	return nil, nil
+	return &emptypb.Empty{}, nil
 }

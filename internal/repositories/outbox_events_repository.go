@@ -6,15 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/vysogota0399/gophermart_billing/internal/logging"
 	"github.com/vysogota0399/gophermart_billing/internal/models"
 	"github.com/vysogota0399/gophermart_billing/internal/storage"
-	"github.com/vysogota0399/gophermart_protos/gen/common"
-	"github.com/vysogota0399/gophermart_protos/gen/entities"
-	"github.com/vysogota0399/gophermart_protos/gen/events"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var OrderCreatedEventName = "order_created"
@@ -39,13 +36,14 @@ func NewOutboxEventsRepository(strg *storage.Storage, lg *logging.ZapLogger) *Ou
 func (rep *OutboxEventsRepository) OrderCreated(ctx context.Context, order *models.Order, tx *sql.Tx) error {
 	var message []byte
 
-	e := &events.OrderCreated{
-		EventUuid:  &common.Uuid{Value: uuid.NewV4().String()},
-		Uuid:       &common.Uuid{Value: order.UUID},
-		Number:     order.Number,
-		UploadedAt: timestamppb.New(order.UploadedAt),
-		State:      entities.OrderStates(order.State),
-		Account:    &entities.Account{Id: order.AccountID},
+	event_uuid := uuid.NewV4().String()
+	e := &models.Meta{
+		UUID:            event_uuid,
+		OrderNumber:     order.Number,
+		OrderUploadedAt: order.UploadedAt.Format(time.RFC3339Nano),
+		OrderUUID:       order.UUID,
+		OrderState:      order.State,
+		OrderAccountID:  order.AccountID,
 	}
 
 	message, err := json.Marshal(e)
@@ -57,7 +55,7 @@ func (rep *OutboxEventsRepository) OrderCreated(ctx context.Context, order *mode
 			INSERT INTO outbox_events(uuid, name, message)
 			VALUES ($1, $2, $3)
 		`
-	_, err = rep.execContext(ctx, tx, query, e.EventUuid, OrderCreatedEventName, message)
+	_, err = rep.execContext(ctx, tx, query, e.UUID, OrderCreatedEventName, message)
 	if err != nil {
 		return fmt.Errorf("internal/repositories/outbox_events_repository save order created event error %w", err)
 	}
@@ -68,10 +66,10 @@ func (rep *OutboxEventsRepository) OrderCreated(ctx context.Context, order *mode
 func (rep *OutboxEventsRepository) OrderUpdated(ctx context.Context, order *models.Order, tx *sql.Tx) error {
 	var message []byte
 
-	e := &events.OrderUpdated{
-		EventUuid: &common.Uuid{Value: uuid.NewV4().String()},
-		Uuid:      &common.Uuid{Value: order.UUID},
-		State:     entities.OrderStates(order.State),
+	e := &models.Meta{
+		UUID:       uuid.NewV4().String(),
+		OrderUUID:  order.UUID,
+		OrderState: order.State,
 	}
 
 	message, err := json.Marshal(e)
@@ -84,7 +82,7 @@ func (rep *OutboxEventsRepository) OrderUpdated(ctx context.Context, order *mode
 			VALUES ($1, $2, $3)
 		`
 
-	_, err = rep.execContext(ctx, tx, query, e.EventUuid, OrderUpdatedEventName, message)
+	_, err = rep.execContext(ctx, tx, query, e.UUID, OrderUpdatedEventName, message)
 
 	if err != nil {
 		return fmt.Errorf("internal/repositories/outbox_events_repository save order updated event error %w", err)
